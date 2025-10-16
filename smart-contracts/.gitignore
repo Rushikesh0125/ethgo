@@ -18,3 +18,7 @@
 
 # Hardhat coverage reports
 /coverage
+
+# Claude Code documentation2
+CLAUDE.md
+.claude

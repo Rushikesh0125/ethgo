@@ -1,57 +1,107 @@
-# Sample Hardhat 3 Beta Project (`mocha` and `ethers`)
+🎫 FairStake Tickets - Web3 Lottery-Based Ticketing Platform
+A revolutionary Web3 ticketing platform that uses verifiable randomness, identity binding, and staking mechanics to ensure fair ticket allocation and prevent scalping.
+🌟 Features
 
-This project showcases a Hardhat 3 Beta project using `mocha` for tests and the `ethers` library for Ethereum interactions.
+✅ Fair Allocation: Lottery-based system using Pyth Entropy VRF for verifiable randomness
+🔒 Anti-Scalping: Identity-bound tickets using World ID (soulbound or identity-gated transfers)
+💰 Staking Rewards: Non-winners receive rebates from platform fee pool
+🏪 Secure Resale: On-platform blind auctions with commit-reveal mechanism
+💳 PYUSD Integration: All payments in PayPal USD stablecoin
+🤖 AI Agents Ready: Designed for autonomous agent participation (Fetch.ai/ASI Alliance)
 
-To learn more about the Hardhat 3 Beta, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3 Beta](https://hardhat.org/hardhat3-beta-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+📋 Table of Contents
 
-## Project Overview
+Architecture
+Smart Contracts
+Installation
+Deployment
+Usage Guide
+Partner Integrations
+Testing
+Security
 
-This example project includes:
+🏗️ Architecture
+┌─────────────────┐
+│  EventManager   │ ──► Manages events and ticket pools
+└────────┬────────┘
+         │
+    ┌────▼────┐
+    │ Staking │ ──► Users stake PYUSD to enter
+    │  Pool   │
+    └────┬────┘
+         │
+    ┌────▼────────┐
+    │  Lottery    │ ──► Pyth Entropy VRF for random draws
+    │   Engine    │
+    └────┬────────┘
+         │
+    ┌────▼────────┐
+    │  Ticket NFT │ ──► Identity-bound soulbound tickets
+    └────┬────────┘
+         │
+    ┌────▼────────┐
+    │   Blind     │ ──► Sealed-bid auctions for resale
+    │  Auction    │
+    └─────────────┘
+📦 Smart Contracts
+Core Contracts
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using `mocha` and ethers.js
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+EventManager.sol - Event creation, pool configuration, lifecycle management
+StakingPool.sol - PYUSD staking, entry tracking, rebate distribution
+LotteryEngine.sol - VRF integration, winner selection, draw management
+IdentityVerifier.sol - World ID integration, sybil resistance
+BoundTicketNFT.sol - ERC-721 with transfer restrictions
+BlindAuction.sol - Commit-reveal sealed-bid auctions
 
-## Usage
+Supporting Contracts
 
-### Running Tests
+MockPYUSD.sol - Mock PayPal USD for testing
+MockEntropy.sol - Mock Pyth Entropy for testing
 
-To run all the tests in the project, execute the following command:
+🚀 Installation
+bash# Clone the repository
+git clone https://github.com/your-repo/fairstake-tickets.git
+cd fairstake-tickets
 
-```shell
-npx hardhat test
-```
+# Install dependencies
+npm install
 
-You can also selectively run the Solidity or `mocha` tests:
+# Compile contracts
+npx hardhat compile
+📋 Prerequisites
 
-```shell
-npx hardhat test solidity
-npx hardhat test mocha
-```
+Node.js v18+
+Hardhat 3
+Sepolia testnet ETH for gas
+PYUSD testnet tokens
 
-### Make a deployment to Sepolia
+🌐 Deployment
+Deploy to Sepolia
+bash# Set environment variables
+export PRIVATE_KEY=your_private_key
+export SEPOLIA_RPC_URL=your_sepolia_rpc
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+# Deploy all contracts
+npx hardhat run scripts/deploy.js --network sepolia
+Deployment will:
 
-To run the deployment to a local chain:
+Deploy all core contracts
+Wire up contract connections
+Set up initial configuration
+Save addresses to deployment-addresses.json
 
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
-```
+Contract Addresses (Sepolia)
+After deployment, addresses will be saved to deployment-addresses.json:
+json{
+  "contracts": {
+    "EventManager": "0x...",
+    "StakingPool": "0x...",
+    "LotteryEngine": "0x...",
+    "IdentityVerifier": "0x...",
+    "BoundTicketNFT": "0x...",
+    "BlindAuction": "0x...",
+    "MockPYUSD": "0x...",
+    "MockEntropy": "0x..."
+  }
+}
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
-
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
-
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
-
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
-```
-
-After setting the variable, you can run the deployment with the Sepolia network:
-
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
-```
