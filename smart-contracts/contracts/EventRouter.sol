@@ -18,6 +18,11 @@ interface IEvent {
     function isAlloted(address user, uint256 tierId) external view returns (bool);
 }
 
+// Add interface for TicketNFT
+interface ITicketNFT {
+    function mint(address to, uint256 id) external;
+}
+
 /// @title EventRouter contract will be used to route the calls to the correct event contract
 /// @author @Rushikesh0125 
 /// @notice Contract to route the calls to the correct event contract
@@ -27,6 +32,8 @@ contract EventRouter is IEntropyConsumer {
     error ZeroAddress(string);
     error InvalidEvent();
     error InvalidData(string);
+    error NotAlloted();
+    error AlreadyClaimed();
 
     address public factory;
     address public owner;
@@ -44,6 +51,9 @@ contract EventRouter is IEntropyConsumer {
     }
 
     mapping(uint64 => PendingSeed) public pendingSeeds;
+
+    // Add claimed mapping
+    mapping(uint256 eventId => mapping(uint256 tierId => mapping(address => bool))) public claimed;
 
     modifier onlyFactory() {
         if (msg.sender != factory) revert Unauthorized();
@@ -157,6 +167,20 @@ contract EventRouter is IEntropyConsumer {
         }
     }
  
+    function claimTicket(uint256 eventId, uint256 tierId) external {
+        address eventAddr = eventAddresses[eventId];
+        if (eventAddr == address(0)) revert InvalidEvent();
+    
+        if (!IEvent(eventAddr).isAlloted(msg.sender, tierId)) revert NotAlloted();
+        if (claimed[eventId][tierId][msg.sender]) revert AlreadyClaimed();
+    
+        claimed[eventId][tierId][msg.sender] = true;
+    
+        address nftAddr = ticketNFTAddresses[eventId];
+        if (nftAddr == address(0)) revert InvalidEvent();
+    
+        ITicketNFT(nftAddr).mint(msg.sender, tierId); // Assuming tierId is the tokenId, starting from 1 to n
+    }
 
     // Add other routed functions as needed, e.g., setRouterAddress if applicable
     function getEntropy() internal view virtual override returns (address) {
