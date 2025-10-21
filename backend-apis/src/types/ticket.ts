@@ -28,8 +28,8 @@ export interface TicketGenerationRequest {
 export interface TicketGenerationResponse {
     success: boolean;
     ticketIds: string[];
-    metadataUris: string[];
-    imageUris: string[];
+    metadataFolderUri: string;
+    imageFolderUri: string; // Add image folder URI
     message?: string;
 }
 
