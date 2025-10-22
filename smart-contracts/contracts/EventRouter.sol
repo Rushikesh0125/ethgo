@@ -16,6 +16,7 @@ interface IEvent {
     function seedAllotment(uint256 tierId, uint256 genSeed, uint256 premiumSeed) external;
     function getBookingMetric(uint256 tierId) external view returns (TierBookingMetric memory);
     function isAlloted(address user, uint256 tierId) external view returns (bool);
+    function revealTime() external view returns (uint256);
 }
 
 // Add interface for TicketNFT
@@ -171,6 +172,7 @@ contract EventRouter is IEntropyConsumer {
         address eventAddr = eventAddresses[eventId];
         if (eventAddr == address(0)) revert InvalidEvent();
     
+        if (block.timestamp < IEvent(eventAddr).revealTime()) revert InvalidData("Not revealed yet");
         if (!IEvent(eventAddr).isAlloted(msg.sender, tierId)) revert NotAlloted();
         if (claimed[eventId][tierId][msg.sender]) revert AlreadyClaimed();
     
