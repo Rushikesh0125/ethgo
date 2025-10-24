@@ -11,6 +11,7 @@ contract Event {
 
     event BookingRegistered(uint256 indexed tierId, uint256 indexed slot, address indexed user);
     event BookingUnregistered(uint256 indexed tierId, uint256 indexed slot, address indexed user, uint256 refundAmount);
+    event RewardsClaimed(uint256 indexed tierId, address indexed user, uint256 refundAmount, uint256 rewardAmount);
 
     error NameCannotBeEmpty();
     error ZeroAddress(string);
@@ -39,11 +40,13 @@ contract Event {
         uint256 totalBookings;
         uint256 totalPremiumBookings;
         uint256 totalGenBookings;
+        uint256 surplusCollected; // Surplus collected from premium tickets above base price
     }
 
     struct UserBooking {
        uint256 genIndex;
        uint256 premiumIndex;
+       bool hasClaimed; // Track if user has claimed refunds/rewards
     }
 
     string name;
@@ -108,6 +111,7 @@ contract Event {
             
             if (data.genPrice == 0) revert ZeroPrice();
             if (data.premiumPrice == 0) revert ZeroPrice();
+            if (data.premiumPrice < data.genPrice) revert InvalidData("PremiumPrice < GenPrice");
             if (data.maxSupply == 0) revert ZeroSupply();
 
             if (data.premiumMaxSupply == 0) revert InvalidData("PremiumMaxSupply");
@@ -132,6 +136,18 @@ contract Event {
         return tierBookingMetric[tierId];
     }
 
+    function getSurplusCollected(uint256 tierId) external view returns (uint256) {
+        return tierBookingMetric[tierId].surplusCollected;
+    }
+
+    function getTierData(uint256 tierId) external view returns (TierData memory) {
+        return tierData[tierId];
+    }
+
+    function getTicketPrice(uint256 tierId, uint256 slot) external view returns (uint256) {
+        return slot == 0 ? tierData[tierId].premiumPrice : tierData[tierId].genPrice;
+    }
+
     function RegisterBooking(uint256 tierId, uint256 slot, address user) external OnlyRouter {
         if (block.timestamp < saleStartTime || block.timestamp >= saleEndTime) revert InvalidData("Sale not active");
         if(slot > 1) revert InvalidData("Invalid slot");
@@ -150,6 +166,8 @@ contract Event {
         if(slot == 0){
             totalPooledUsd += tierDataInfo.premiumPrice;
             bookingMetric.totalPremiumBookings++;
+            // Track surplus from premium tickets (premiumPrice - genPrice)
+            bookingMetric.surplusCollected += (tierDataInfo.premiumPrice - tierDataInfo.genPrice);
             userBooking.premiumIndex = usersByTier[tierId][slot].length + 1;
         } else {
             totalPooledUsd += tierDataInfo.genPrice;
@@ -197,6 +215,8 @@ contract Event {
         if(slot == 0) {
             totalPooledUsd -= tierDataInfo.premiumPrice;
             bookingMetric.totalPremiumBookings--;
+            // Reduce surplus when premium booking is cancelled
+            bookingMetric.surplusCollected -= (tierDataInfo.premiumPrice - tierDataInfo.genPrice);
         } else {
             totalPooledUsd -= tierDataInfo.genPrice;
             bookingMetric.totalGenBookings--;
@@ -300,6 +320,90 @@ contract Event {
         return better < available;
     }
 
+    /// @notice Allows users to claim refunds and rewards after reveal if they didn't get tickets
+    /// @param tierId The tier ID to claim for
+    function claimRefundAndRewards(uint256 tierId) external {
+        if (block.timestamp < revealTime) revert InvalidData("Not revealed yet");
+        
+        TierData memory tierDataInfo = tierData[tierId];
+        if(tierDataInfo.maxSupply == 0) revert InvalidData("Tier not found");
+        
+        UserBooking storage userBooking = userBookingsByTier[msg.sender][tierId];
+        if(userBooking.hasClaimed) revert InvalidData("Already claimed");
+        
+        // Check if user has any bookings
+        bool premiumBooked = userBooking.premiumIndex != 0;
+        bool genBooked = userBooking.genIndex != 0;
+        
+        if (!premiumBooked && !genBooked) revert InvalidData("No bookings found");
+        
+        // Check if user won any tickets
+        bool premiumWin = premiumBooked && _isWinner(tierId, 0, msg.sender);
+        bool genWin = genBooked && _isWinner(tierId, 1, msg.sender);
+        
+        if (premiumWin || genWin) revert InvalidData("User won tickets, no refund");
+        
+        // Calculate refund amounts
+        uint256 totalRefund = 0;
+        if (premiumBooked) {
+            totalRefund += tierDataInfo.premiumPrice;
+        }
+        if (genBooked) {
+            totalRefund += tierDataInfo.genPrice;
+        }
+        
+        // Calculate reward amount from surplus
+        TierBookingMetric memory bookingMetric = tierBookingMetric[tierId];
+        uint256 rewardAmount = 0;
+        
+        if (bookingMetric.surplusCollected > 0) {
+            // Count total users who didn't win (eligible for rewards)
+            uint256 totalEligibleUsers = _countEligibleUsers(tierId);
+            if (totalEligibleUsers > 0) {
+                rewardAmount = bookingMetric.surplusCollected / totalEligibleUsers;
+            }
+        }
+        
+        // Mark as claimed
+        userBooking.hasClaimed = true;
+        
+        // Transfer refund + reward
+        uint256 totalAmount = totalRefund + rewardAmount;
+        bool success = pyusd.transfer(msg.sender, totalAmount);
+        require(success, "PyUSD transfer failed");
+        
+        emit RewardsClaimed(tierId, msg.sender, totalRefund, rewardAmount);
+    }
+    
+    /// @notice Counts users who are eligible for rewards (didn't win tickets)
+    function _countEligibleUsers(uint256 tierId) internal view returns (uint256) {
+        uint256 eligibleCount = 0;
+        
+        // Check premium slot users
+        address[] storage premiumUsers = usersByTier[tierId][0];
+        for (uint256 i = 0; i < premiumUsers.length; i++) {
+            address user = premiumUsers[i];
+            UserBooking memory userBooking = userBookingsByTier[user][tierId];
+            if (!userBooking.hasClaimed && !_isWinner(tierId, 0, user)) {
+                eligibleCount++;
+            }
+        }
+        
+        // Check gen slot users
+        address[] storage genUsers = usersByTier[tierId][1];
+        for (uint256 i = 0; i < genUsers.length; i++) {
+            address user = genUsers[i];
+            UserBooking memory userBooking = userBookingsByTier[user][tierId];
+            if (!userBooking.hasClaimed && !_isWinner(tierId, 1, user)) {
+                // Avoid double counting users who have both premium and gen bookings
+                if (userBooking.premiumIndex == 0 || _isWinner(tierId, 0, user)) {
+                    eligibleCount++;
+                }
+            }
+        }
+        
+        return eligibleCount;
+    }
 
     
 }

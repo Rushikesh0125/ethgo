@@ -3,6 +3,7 @@ pragma solidity ^0.8.28;
 
 import { IEntropyConsumer } from "@pythnetwork/entropy-sdk-solidity/IEntropyConsumer.sol";
 import { IEntropyV2 } from "@pythnetwork/entropy-sdk-solidity/IEntropyV2.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 interface IEvent {
     struct TierBookingMetric {
@@ -11,12 +12,23 @@ interface IEvent {
         uint256 totalGenBookings;
     }
 
+    struct TierData {
+        uint256 genPrice;
+        uint256 premiumPrice;
+        uint256 maxSupply;
+        uint256 premiumMaxSupply;
+        uint256 genSeed;
+        uint256 premiumSeed;
+    }
+
     function RegisterBooking(uint256 tierId, uint256 slot, address user) external;
     function unregisterBooking(uint256 tierId, uint256 slot, address user) external;
     function seedAllotment(uint256 tierId, uint256 genSeed, uint256 premiumSeed) external;
     function getBookingMetric(uint256 tierId) external view returns (TierBookingMetric memory);
     function isAlloted(address user, uint256 tierId) external view returns (bool);
     function revealTime() external view returns (uint256);
+    function getTierData(uint256 tierId) external view returns (TierData memory);
+    function getTicketPrice(uint256 tierId, uint256 slot) external view returns (uint256);
 }
 
 // Add interface for TicketNFT
@@ -41,6 +53,7 @@ contract EventRouter is IEntropyConsumer {
     uint256 public nextEventId;
 
     IEntropyV2 public entropyV2;
+    IERC20 public pyUsd;
 
     mapping(uint256 => address) public eventAddresses; // 
     mapping(uint256 => address) public ticketNFTAddresses;
@@ -66,10 +79,11 @@ contract EventRouter is IEntropyConsumer {
         _;
     }
 
-    constructor(address _entropyV2) {
+    constructor(address _entropyV2, address _pyUsd) {
         if (_entropyV2 == address(0)) revert ZeroAddress("EntropyV2");
         owner = msg.sender; // Set initial owner
         entropyV2 = IEntropyV2(_entropyV2);
+        pyUsd = IERC20(_pyUsd);
     }
 
     function setFactory(address _factory) external onlyOwner {
@@ -95,7 +109,12 @@ contract EventRouter is IEntropyConsumer {
     ) external {
         address eventAddr = eventAddresses[eventId];
         if (eventAddr == address(0)) revert InvalidEvent();
+
+        uint256 price = IEvent(eventAddr).getTicketPrice(tierId, slot);
+
         IEvent(eventAddr).RegisterBooking(tierId, slot, msg.sender);
+        bool success = pyUsd.transferFrom(msg.sender, eventAddr, price);
+        require(success, "PyUSD transfer failed");
     }
 
     function unregisterBooking(
