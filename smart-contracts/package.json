@@ -4,28 +4,33 @@
   "type": "module",
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.3",
+    "@nomicfoundation/hardhat-ignition-ethers": "^3.0.3",
+    "@nomicfoundation/hardhat-ignition-viem": "^3.0.3",
     "@nomicfoundation/hardhat-keystore": "^3.0.2",
-    "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.0",
+    "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "@nomicfoundation/hardhat-verify": "^3.0.4",
     "@types/chai": "^4.3.20",
     "@types/chai-as-promised": "^8.0.2",
     "@types/mocha": "^10.0.10",
     "@types/node": "^22.18.9",
     "chai": "^5.3.3",
     "ethers": "^6.15.0",
-    "forge-std": "github:foundry-rs/forge-std#v1.9.4",
     "hardhat": "^3.0.7",
     "mocha": "^11.7.4",
     "typescript": "~5.8.0"
   },
   "dependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.1.0",
+    "@nomicfoundation/hardhat-ethers": "^4.0.2",
     "@openzeppelin/contracts": "^5.4.0",
+    "@pythnetwork/entropy-sdk-solidity": "^2.1.0",
     "dotenv": "^17.2.3"
   },
   "scripts": {
     "register-events": "hardhat run scripts/register-events.ts --network arbSepolia",
     "book-tickets": "hardhat run scripts/book-tickets.ts --network arbSepolia",
+    "unregister-booking": "hardhat run scripts/unregister-booking.ts --network arbSepolia",
     "claim-ticket": "hardhat run scripts/claim-ticket.ts --network arbSepolia",
-    "claim-refund-and-rewards": "hardhat run scripts/claim-refund-and-rewards.ts --network arbSepolia",
-    "get-event-info": "hardhat run scripts/get-event-info.ts --network arbSepolia"
+    "claim-refund-and-rewards": "hardhat run scripts/claim-refund-and-rewards.ts --network arbSepolia"
   }
 }

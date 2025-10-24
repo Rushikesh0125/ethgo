@@ -1,11 +1,12 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
-import { config } from "dotenv";
-import { configVariable } from "hardhat/config";
-
-config();
+import hre from "hardhat";
 
 export default buildModule("EventFactoryModule", (m) => {
 
-    const eventFactory = m.contract("EventFactory", ["0x637A1259C6afd7E3AdF63993cA7E58BB438aB1B1", "0x735356F9cf30c239d00E5B7F667dB7D52fe784A3"]);
+
+    const eventFactory = m.contract("EventFactory", ["0x637A1259C6afd7E3AdF63993cA7E58BB438aB1B1", "0xC0CBbCDdc84FADC9A57394A760359411D6191Ed0"]);
+    
+    m.call(eventFactory, "transferOwnership", ["0xdAF6B85622907cD2b6B52dEc72b32e60084054a9"]);
+    
     return {eventFactory}
 });

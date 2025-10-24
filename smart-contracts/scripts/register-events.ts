@@ -1,125 +1,124 @@
-const hre = require("hardhat");
-const { ethers } = require("hardhat");
+import fs from "node:fs";
+import path from "node:path";
+import hre from "hardhat";
+import { EventFactory__factory, EventRouter__factory } from "../types/ethers-contracts/index.js";
 
-async function main() {
-  console.log("Starting Event Creation Script...\n");
+type TierInput = {
+  id: number;
+  genPrice: string | number; // raw token units
+  premiumPrice: string | number; // raw token units
+  maxSupply: number;
+  premiumMaxSupply: number;
+};
 
-  const [deployer] = await ethers.getSigners();
-  console.log("Using account:", deployer.address);
-  console.log("Account balance:", ethers.formatEther(await ethers.provider.getBalance(deployer.address)), "ETH\n");
+type EventConfig = {
+  name: string;
+  saleStartTime: number;
+  saleEndTime: number;
+  revealTime: number;
+  metadataUri: string;
+  tiers: TierInput[];
+};
 
-  const PYUSD_ADDRESS = "0x637A1259C6afd7E3AdF63993cA7E58BB438aB1B1"; 
-  const ROUTER_ADDRESS = "0x735356F9cf30c239d00E5B7F667dB7D52fe784A3"; 
-  const FACTORY_ADDRESS = "0x961bFEa0C4e2879CeadCBcfE21EBD77ECEcfA04d"; 
-
-
-  let factoryAddress = FACTORY_ADDRESS;
-  
-  if (!FACTORY_ADDRESS || FACTORY_ADDRESS === "0x961bFEa0C4e2879CeadCBcfE21EBD77ECEcfA04d") {
-    console.log("Deploying EventFactory...");
-    const EventFactory = await ethers.getContractFactory("EventFactory");
-    const factory = await EventFactory.deploy(PYUSD_ADDRESS, ROUTER_ADDRESS);
-    await factory.waitForDeployment();
-    factoryAddress = await factory.getAddress();
-    console.log("EventFactory deployed to:", factoryAddress);
-    console.log("Waiting for block confirmations...\n");
-    await factory.deploymentTransaction().wait(5);
-  } else {
-    console.log("Using existing EventFactory at:", factoryAddress, "\n");
-  }
-
-  
-  
-  const eventName = "Summer Music Festival 2025";
-  const metadataUri = "ipfs://QmYourMetadataHash/"; 
-  
-  const now = Math.floor(Date.now() / 1000);
-  const saleStartTime = now + 300; // Start in 5 minutes
-  const saleEndTime = now + (7 * 24 * 60 * 60); // 7 days from now
-  const revealTime = now + (8 * 24 * 60 * 60); // 8 days from now
-
-  console.log("Event Configuration:");
-  console.log("- Name:", eventName);
-  console.log("- Sale Start:", new Date(saleStartTime * 1000).toISOString());
-  console.log("- Sale End:", new Date(saleEndTime * 1000).toISOString());
-  console.log("- Reveal Time:", new Date(revealTime * 1000).toISOString());
-  console.log("");
-
-  
-  const tierIds = [1, 2, 3]; // VIP, Gold, Silver
-  
-  // Tier Data
-  const tierDataArray = [
-    {
-      genPrice: ethers.parseUnits("100", 6),      // $100 PYUSD (6 decimals)
-      premiumPrice: ethers.parseUnits("150", 6),  // $150 PYUSD
-      maxSupply: 100,                              // 100 total tickets
-      premiumMaxSupply: 30,                        // 30 premium tickets
-      genSeed: 0,                                  // Will be set later
-      premiumSeed: 0                               // Will be set later
-    },
-    {
-      genPrice: ethers.parseUnits("50", 6),       // $50 PYUSD
-      premiumPrice: ethers.parseUnits("75", 6),   // $75 PYUSD
-      maxSupply: 200,                              // 200 total tickets
-      premiumMaxSupply: 50,                        // 50 premium tickets
-      genSeed: 0,
-      premiumSeed: 0
-    },
-    {
-      genPrice: ethers.parseUnits("25", 6),       // $25 PYUSD
-      premiumPrice: ethers.parseUnits("35", 6),   // $35 PYUSD
-      maxSupply: 500,                              // 500 total tickets
-      premiumMaxSupply: 100,                       // 100 premium tickets
-      genSeed: 0,
-      premiumSeed: 0
-    }
-  ];
-
-  console.log("Tier Configuration:");
-  tierIds.forEach((id, index) => {
-    const tier = tierDataArray[index];
-    console.log(`\nTier ${id}:`);
-    console.log(`  - Gen Price: $${ethers.formatUnits(tier.genPrice, 6)}`);
-    console.log(`  - Premium Price: $${ethers.formatUnits(tier.premiumPrice, 6)}`);
-    console.log(`  - Max Supply: ${tier.maxSupply}`);
-    console.log(`  - Premium Max Supply: ${tier.premiumMaxSupply}`);
-  });
-  console.log("");
-
- 
-  
-  console.log("Creating event...");
-  const factory = await ethers.getContractAt("EventFactory", factoryAddress);
-  
-  const tx = await factory.createEvent(
-    eventName,
-    saleStartTime,
-    saleEndTime,
-    revealTime,
-    tierIds,
-    tierDataArray,
-    metadataUri
+function readDeploymentAddresses(chainId: string) {
+  const file = path.join(
+    __dirname,
+    `../ignition/deployments/chain-${chainId}/deployed_addresses.json`
   );
-
-  console.log("Transaction hash:", tx.hash);
-  console.log("Waiting for confirmation...");
-  
-  const receipt = await tx.wait();
-  console.log("Transaction confirmed in block:", receipt.blockNumber);
- 
-  console.log("\nEvent created successfully!");
-  console.log("Check the EventRouter for the new event ID and addresses");
-  console.log("Router address:", ROUTER_ADDRESS);
-  
-
-  console.log("\n✅ Event creation complete!");
+  const json = JSON.parse(fs.readFileSync(file, "utf8"));
+  const router: string = json["EventRouterModule#EventRouter"];
+  const factory: string = json["EventFactoryModule#EventFactory"];
+  if (!router || !factory) throw new Error("Missing router/factory in deployed_addresses.json");
+  return { router, factory };
 }
 
-// Execute the script
-main()
-  .then(() => process.exit(0))
-  .catch((error) => {
-    console.error(error);
-    process.exit(1);
-  });
+function loadConfig(): EventConfig {
+  const now = Math.floor(Date.now() / 1000);
+  return {
+    name: "Demo Event",
+    saleStartTime: now + 60, // starts in 1 minute
+    saleEndTime: now + 3600, // 1 hour sale
+    revealTime: now + 7200, // reveal after 2 hours
+    metadataUri:
+      "ipfs://bafybeihjjkwdrxxjnuwevlqtqmh3iegcadc32sio4wmo7bv2gbf34qs34a/{id}.json",
+    tiers: [
+      {
+        id: 1,
+        genPrice: "1000000", // 1.0 PYUSD (6 decimals)
+        premiumPrice: "2000000", // 2.0 PYUSD
+        maxSupply: 100,
+        premiumMaxSupply: 20,
+      },
+      {
+        id: 2,
+        genPrice: "500000", // 0.5 PYUSD
+        premiumPrice: "900000", // 0.9 PYUSD
+        maxSupply: 200,
+        premiumMaxSupply: 50,
+      },
+    ],
+  };
+}
+
+async function main() {
+  const chainId = process.env.DEPLOYMENT_CHAIN_ID || "421614";
+  const { router: routerAddress, factory: factoryAddress } = readDeploymentAddresses(chainId);
+
+  const connection = await hre.network.connect();
+  const { ethers } = connection as any;
+  const [deployer] = await ethers.getSigners();
+
+  const router = EventRouter__factory.connect(routerAddress, deployer);
+  const factory = EventFactory__factory.connect(factoryAddress, deployer);
+
+  // Ensure router.factory is set to factoryAddress
+  const currentFactory = await router.factory();
+  if (currentFactory.toLowerCase() !== factoryAddress.toLowerCase()) {
+    const owner = await router.owner();
+    if (owner.toLowerCase() !== (await deployer.getAddress()).toLowerCase()) {
+      throw new Error(
+        `Router.factory is not set. Please run setFactory as router owner ${owner} or use the correct private key.`
+      );
+    }
+    const tx = await router.setFactory(factoryAddress);
+    await tx.wait();
+  }
+
+  const cfg = loadConfig();
+
+  const tierIds = cfg.tiers.map((t) => BigInt(t.id));
+  const tierDataArray = cfg.tiers.map((t) => ({
+    genPrice: BigInt(t.genPrice as any),
+    premiumPrice: BigInt(t.premiumPrice as any),
+    maxSupply: BigInt(t.maxSupply),
+    premiumMaxSupply: BigInt(t.premiumMaxSupply),
+    genSeed: 0n,
+    premiumSeed: 0n,
+  }));
+
+  const tx = await factory.createEvent(
+    cfg.name,
+    BigInt(cfg.saleStartTime),
+    BigInt(cfg.saleEndTime),
+    BigInt(cfg.revealTime),
+    tierIds,
+    tierDataArray,
+    cfg.metadataUri
+  );
+  await tx.wait();
+
+  // EventFactory returns eventId; parse from return data if present
+  // ethers v6 returns the function result in receipt.logs decoding is complex; simply
+  // call nextEventId-1 via router as confirmation path:
+  // We don’t know eventId from router mapping; the factory returns it reliably in v6
+  await tx.wait();
+  // Best-effort: show a hint to check by querying router.eventAddresses
+
+  console.log("Event created. You can verify with router.eventAddresses(eventId).");
+  console.log({ routerAddress, factoryAddress, txHash: tx.hash });
+}
+
+main().catch((err) => {
+  console.error(err);
+  process.exitCode = 1;
+});
