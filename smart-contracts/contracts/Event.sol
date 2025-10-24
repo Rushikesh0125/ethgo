@@ -322,13 +322,13 @@ contract Event {
 
     /// @notice Allows users to claim refunds and rewards after reveal if they didn't get tickets
     /// @param tierId The tier ID to claim for
-    function claimRefundAndRewards(uint256 tierId) external {
+    function claimRefundAndRewards(address user, uint256 tierId) external OnlyRouter {
         if (block.timestamp < revealTime) revert InvalidData("Not revealed yet");
         
         TierData memory tierDataInfo = tierData[tierId];
         if(tierDataInfo.maxSupply == 0) revert InvalidData("Tier not found");
         
-        UserBooking storage userBooking = userBookingsByTier[msg.sender][tierId];
+        UserBooking storage userBooking = userBookingsByTier[user][tierId];
         if(userBooking.hasClaimed) revert InvalidData("Already claimed");
         
         // Check if user has any bookings
@@ -338,8 +338,8 @@ contract Event {
         if (!premiumBooked && !genBooked) revert InvalidData("No bookings found");
         
         // Check if user won any tickets
-        bool premiumWin = premiumBooked && _isWinner(tierId, 0, msg.sender);
-        bool genWin = genBooked && _isWinner(tierId, 1, msg.sender);
+        bool premiumWin = premiumBooked && _isWinner(tierId, 0, user);
+        bool genWin = genBooked && _isWinner(tierId, 1, user);
         
         if (premiumWin || genWin) revert InvalidData("User won tickets, no refund");
         
@@ -369,10 +369,10 @@ contract Event {
         
         // Transfer refund + reward
         uint256 totalAmount = totalRefund + rewardAmount;
-        bool success = pyusd.transfer(msg.sender, totalAmount);
+        bool success = pyusd.transfer(user, totalAmount);
         require(success, "PyUSD transfer failed");
         
-        emit RewardsClaimed(tierId, msg.sender, totalRefund, rewardAmount);
+        emit RewardsClaimed(tierId, user, totalRefund, rewardAmount);
     }
     
     /// @notice Counts users who are eligible for rewards (didn't win tickets)

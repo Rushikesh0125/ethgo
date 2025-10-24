@@ -6,6 +6,6 @@ config();
 
 export default buildModule("EventFactoryModule", (m) => {
 
-    const eventFactory = m.contract("EventFactory", ["0x637A1259C6afd7E3AdF63993cA7E58BB438aB1B1", "0x07bc3643282fD005cd4B9B095209aD838B561B8a"]);
+    const eventFactory = m.contract("EventFactory", ["0x637A1259C6afd7E3AdF63993cA7E58BB438aB1B1", "0x735356F9cf30c239d00E5B7F667dB7D52fe784A3"]);
     return {eventFactory}
 });

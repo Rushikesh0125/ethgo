@@ -29,6 +29,7 @@ interface IEvent {
     function revealTime() external view returns (uint256);
     function getTierData(uint256 tierId) external view returns (TierData memory);
     function getTicketPrice(uint256 tierId, uint256 slot) external view returns (uint256);
+    function claimRefundAndRewards(address user, uint256 tierId) external;
 }
 
 // Add interface for TicketNFT
@@ -201,6 +202,13 @@ contract EventRouter is IEntropyConsumer {
         if (nftAddr == address(0)) revert InvalidEvent();
     
         ITicketNFT(nftAddr).mint(msg.sender, tierId); // Assuming tierId is the tokenId, starting from 1 to n
+    }
+
+    function claimRefundAndRewards(uint256 eventId, uint256 tierId) external {
+        address eventAddr = eventAddresses[eventId];
+        if (eventAddr == address(0)) revert InvalidEvent();
+        
+        IEvent(eventAddr).claimRefundAndRewards(msg.sender, tierId);
     }
 
     // Add other routed functions as needed, e.g., setRouterAddress if applicable
