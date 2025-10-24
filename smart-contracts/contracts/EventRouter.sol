@@ -42,7 +42,7 @@ contract EventRouter is IEntropyConsumer {
 
     IEntropyV2 public entropyV2;
 
-    mapping(uint256 => address) public eventAddresses;
+    mapping(uint256 => address) public eventAddresses; // 
     mapping(uint256 => address) public ticketNFTAddresses;
 
     // Add struct and mapping for pending seeds

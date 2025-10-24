@@ -18,6 +18,7 @@ contract TicketNFT is ERC1155 {
     error DuplicateTierId();
     error UnknownTier();
     error TierCapReached();
+	
     
 	/// @dev Address allowed to mint tickets
 	address public immutable minter;
