@@ -31,6 +31,7 @@
     "book-tickets": "hardhat run scripts/book-tickets.ts --network arbSepolia",
     "unregister-booking": "hardhat run scripts/unregister-booking.ts --network arbSepolia",
     "claim-ticket": "hardhat run scripts/claim-ticket.ts --network arbSepolia",
-    "claim-refund-and-rewards": "hardhat run scripts/claim-refund-and-rewards.ts --network arbSepolia"
+    "claim-refund-and-rewards": "hardhat run scripts/claim-refund-and-rewards.ts --network arbSepolia",
+    "set-factory": "hardhat run scripts/set-factory.ts --network arbSepolia"
   }
 }

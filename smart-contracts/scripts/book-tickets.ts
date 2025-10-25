@@ -1,18 +1,5 @@
-import fs from "node:fs";
-import path from "node:path";
 import hre from "hardhat";
 import { EventRouter__factory } from "../types/ethers-contracts/index.js";
-
-function readDeploymentAddresses(chainId: string) {
-  const file = path.join(
-    __dirname,
-    `../ignition/deployments/chain-${chainId}/deployed_addresses.json`
-  );
-  const json = JSON.parse(fs.readFileSync(file, "utf8"));
-  const router: string = json["EventRouterModule#EventRouter"];
-  if (!router) throw new Error("Missing router in deployed_addresses.json");
-  return { router };
-}
 
 async function main() {
   const chainId = process.env.DEPLOYMENT_CHAIN_ID || "421614";
@@ -20,7 +7,7 @@ async function main() {
   const tierId = BigInt(process.env.TIER_ID || "1");
   const slot = BigInt(process.env.SLOT || "1"); // 0=premium, 1=gen
 
-  const { router: routerAddress } = readDeploymentAddresses(chainId);
+  const routerAddress = "0x8D7078065c06674394106b878e15545502322425"
 
   const connection = await hre.network.connect();
   const { ethers } = connection as any;

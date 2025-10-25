@@ -1,5 +1,4 @@
-import fs from "node:fs";
-import path from "node:path";
+
 import hre from "hardhat";
 import { EventFactory__factory, EventRouter__factory } from "../types/ethers-contracts/index.js";
 
@@ -20,17 +19,6 @@ type EventConfig = {
   tiers: TierInput[];
 };
 
-function readDeploymentAddresses(chainId: string) {
-  const file = path.join(
-    __dirname,
-    `../ignition/deployments/chain-${chainId}/deployed_addresses.json`
-  );
-  const json = JSON.parse(fs.readFileSync(file, "utf8"));
-  const router: string = json["EventRouterModule#EventRouter"];
-  const factory: string = json["EventFactoryModule#EventFactory"];
-  if (!router || !factory) throw new Error("Missing router/factory in deployed_addresses.json");
-  return { router, factory };
-}
 
 function loadConfig(): EventConfig {
   const now = Math.floor(Date.now() / 1000);
@@ -62,7 +50,8 @@ function loadConfig(): EventConfig {
 
 async function main() {
   const chainId = process.env.DEPLOYMENT_CHAIN_ID || "421614";
-  const { router: routerAddress, factory: factoryAddress } = readDeploymentAddresses(chainId);
+  const routerAddress = "0x8D7078065c06674394106b878e15545502322425"
+  const factoryAddress ="0xC5D9CF642193fe279C6D9B7adA6048cBc48DfD6b";
 
   const connection = await hre.network.connect();
   const { ethers } = connection as any;
@@ -98,9 +87,9 @@ async function main() {
 
   const tx = await factory.createEvent(
     cfg.name,
-    BigInt(cfg.saleStartTime),
-    BigInt(cfg.saleEndTime),
-    BigInt(cfg.revealTime),
+    String(cfg.saleStartTime),
+    String(cfg.saleEndTime),
+    String(cfg.revealTime),
     tierIds,
     tierDataArray,
     cfg.metadataUri
