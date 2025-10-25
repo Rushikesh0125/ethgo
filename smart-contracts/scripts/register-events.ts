@@ -23,27 +23,34 @@ type EventConfig = {
 function loadConfig(): EventConfig {
   const now = Math.floor(Date.now() / 1000);
   return {
-    name: "Demo Event",
-    saleStartTime: now + 60, // starts in 1 minute
-    saleEndTime: now + 3600, // 1 hour sale
-    revealTime: now + 7200, // reveal after 2 hours
+    name: "Music Event",
+    saleStartTime: now + 120, // starts in 1 minute
+    saleEndTime: now + 18000, // 5 hour sale
+    revealTime: now + 21600, // reveal after 6 hours
     metadataUri:
       "ipfs://bafybeihjjkwdrxxjnuwevlqtqmh3iegcadc32sio4wmo7bv2gbf34qs34a/{id}.json",
     tiers: [
       {
         id: 1,
-        genPrice: "1000000", // 1.0 PYUSD (6 decimals)
-        premiumPrice: "2000000", // 2.0 PYUSD
-        maxSupply: 100,
-        premiumMaxSupply: 20,
-      },
-      {
-        id: 2,
-        genPrice: "500000", // 0.5 PYUSD
-        premiumPrice: "900000", // 0.9 PYUSD
+        genPrice: "2000000", // 1.0 PYUSD (6 decimals)
+        premiumPrice: "3000000", // 2.0 PYUSD
         maxSupply: 200,
         premiumMaxSupply: 50,
       },
+      {
+        id: 2,
+        genPrice: "1000000", // 0.5 PYUSD
+        premiumPrice: "1200000", // 0.9 PYUSD
+        maxSupply: 300,
+        premiumMaxSupply: 75,
+      },
+      {
+        id: 3,
+        genPrice: "1500000", 
+        premiumPrice: "2000000", 
+        maxSupply: 300,
+        premiumMaxSupply: 75,
+      }
     ],
   };
 }
