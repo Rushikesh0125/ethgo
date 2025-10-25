@@ -1,10 +1,9 @@
-
 import hre from "hardhat";
 import { EventRouter__factory } from "../types/ethers-contracts/index.js";
 
 async function main() {
-  const newFactory = "0xa63134f49048B21Ae521dB421b3FA9535f5A0743";
-  const routerAddress = "0xc26e5ACB391fB339D5baBF1f184742bF201cDf4B"
+  const newOwner = "0xdAF6B85622907cD2b6B52dEc72b32e60084054a9";
+  const routerAddress = "0xc26e5ACB391fB339D5baBF1f184742bF201cDf4B";
 
   const connection = await hre.network.connect();
   const { ethers } = connection as any;
@@ -19,16 +18,14 @@ async function main() {
     );
   }
 
-  const currentFactory = await router.factory();
-  console.log("currentFactory", currentFactory);
-  if (currentFactory.toLowerCase() === newFactory.toLowerCase()) {
-    console.log("Factory already set:", { routerAddress, factory: newFactory });
+  if (owner.toLowerCase() === newOwner.toLowerCase()) {
+    console.log("Owner already set:", { routerAddress, owner: newOwner });
     return;
   }
 
-  const tx = await router.setFactory(newFactory);
+  const tx = await router.setOwner(newOwner);
   await tx.wait();
-  console.log("Factory updated:", { routerAddress, oldFactory: currentFactory, newFactory, txHash: tx.hash });
+  console.log("Owner updated:", { routerAddress, oldOwner: owner, newOwner, txHash: tx.hash });
 }
 
 main().catch((err) => {

@@ -23,7 +23,7 @@ type EventConfig = {
 function loadConfig(): EventConfig {
   const now = Math.floor(Date.now() / 1000);
   return {
-    name: "Music Event",
+    name: "Sports Event",
     saleStartTime: now + 120, // starts in 1 minute
     saleEndTime: now + 18000, // 5 hour sale
     revealTime: now + 21600, // reveal after 6 hours
@@ -32,8 +32,8 @@ function loadConfig(): EventConfig {
     tiers: [
       {
         id: 1,
-        genPrice: "2000000", // 1.0 PYUSD (6 decimals)
-        premiumPrice: "3000000", // 2.0 PYUSD
+        genPrice: "1000000", // 1.0 PYUSD (6 decimals)
+        premiumPrice: "2000000", // 2.0 PYUSD
         maxSupply: 200,
         premiumMaxSupply: 50,
       },
@@ -43,13 +43,6 @@ function loadConfig(): EventConfig {
         premiumPrice: "1200000", // 0.9 PYUSD
         maxSupply: 300,
         premiumMaxSupply: 75,
-      },
-      {
-        id: 3,
-        genPrice: "1500000", 
-        premiumPrice: "2000000", 
-        maxSupply: 300,
-        premiumMaxSupply: 75,
       }
     ],
   };
@@ -57,8 +50,8 @@ function loadConfig(): EventConfig {
 
 async function main() {
   const chainId = process.env.DEPLOYMENT_CHAIN_ID || "421614";
-  const routerAddress = "0x8D7078065c06674394106b878e15545502322425"
-  const factoryAddress ="0xC5D9CF642193fe279C6D9B7adA6048cBc48DfD6b";
+  const routerAddress = "0xc26e5ACB391fB339D5baBF1f184742bF201cDf4B"
+  const factoryAddress ="0xa63134f49048B21Ae521dB421b3FA9535f5A0743";
 
   const connection = await hre.network.connect();
   const { ethers } = connection as any;

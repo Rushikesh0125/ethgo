@@ -91,6 +91,21 @@ contract EventRouter is IEntropyConsumer {
         factory = _factory;
     }
 
+    function setPyUsd(address _pyUsd) external onlyOwner {
+        if (_pyUsd == address(0)) revert ZeroAddress("PYUSD");
+        pyUsd = IERC20(_pyUsd);
+    }
+
+    function setEntropyV2(address _entropyV2) external onlyOwner {
+        if (_entropyV2 == address(0)) revert ZeroAddress("EntropyV2");
+        entropyV2 = IEntropyV2(_entropyV2);
+    }
+
+    function setOwner(address _owner) external onlyOwner {
+        if (_owner == address(0)) revert ZeroAddress("Owner");
+        owner = _owner;
+    }
+
     function registerEvent(
         address eventAddr,
         address ticketNFTAddr

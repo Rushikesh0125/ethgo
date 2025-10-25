@@ -1,10 +1,9 @@
-
 import hre from "hardhat";
 import { EventRouter__factory } from "../types/ethers-contracts/index.js";
 
 async function main() {
-  const newFactory = "0xa63134f49048B21Ae521dB421b3FA9535f5A0743";
-  const routerAddress = "0xc26e5ACB391fB339D5baBF1f184742bF201cDf4B"
+  const newEntropyV2 = "0xEntropyV2AddressHere";
+  const routerAddress = "0xc26e5ACB391fB339D5baBF1f184742bF201cDf4B";
 
   const connection = await hre.network.connect();
   const { ethers } = connection as any;
@@ -19,16 +18,16 @@ async function main() {
     );
   }
 
-  const currentFactory = await router.factory();
-  console.log("currentFactory", currentFactory);
-  if (currentFactory.toLowerCase() === newFactory.toLowerCase()) {
-    console.log("Factory already set:", { routerAddress, factory: newFactory });
+  const current = await router.getEntropy();
+  console.log("currentEntropyV2", current);
+  if (current.toLowerCase() === newEntropyV2.toLowerCase()) {
+    console.log("EntropyV2 already set:", { routerAddress, entropyV2: newEntropyV2 });
     return;
   }
 
-  const tx = await router.setFactory(newFactory);
+  const tx = await router.setEntropyV2(newEntropyV2);
   await tx.wait();
-  console.log("Factory updated:", { routerAddress, oldFactory: currentFactory, newFactory, txHash: tx.hash });
+  console.log("EntropyV2 updated:", { routerAddress, oldEntropyV2: current, newEntropyV2, txHash: tx.hash });
 }
 
 main().catch((err) => {

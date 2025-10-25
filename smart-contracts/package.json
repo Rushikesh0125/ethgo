@@ -8,6 +8,7 @@
     "@nomicfoundation/hardhat-ignition-viem": "^3.0.3",
     "@nomicfoundation/hardhat-keystore": "^3.0.2",
     "@nomicfoundation/hardhat-toolbox": "^6.1.0",
+    "@nomicfoundation/hardhat-typechain": "^3.0.0",
     "@nomicfoundation/hardhat-verify": "^3.0.4",
     "@types/chai": "^4.3.20",
     "@types/chai-as-promised": "^8.0.2",
@@ -32,6 +33,10 @@
     "unregister-booking": "hardhat run scripts/unregister-booking.ts --network arbSepolia",
     "claim-ticket": "hardhat run scripts/claim-ticket.ts --network arbSepolia",
     "claim-refund-and-rewards": "hardhat run scripts/claim-refund-and-rewards.ts --network arbSepolia",
-    "set-factory": "hardhat run scripts/set-factory.ts --network arbSepolia"
+    "set-factory": "hardhat run scripts/set-factory.ts --network arbSepolia",
+    "set-pyusd": "hardhat run scripts/set-pyusd.ts --network arbSepolia",
+    "set-entropyV2": "hardhat run scripts/set-entropyV2.ts --network arbSepolia",
+    "set-owner": "hardhat run scripts/set-owner.ts --network arbSepolia",
+    "change-owner": "hardhat run scripts/change-owner.ts --network arbSepolia"
   }
 }
