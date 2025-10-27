@@ -1,11 +1,10 @@
 import type { HardhatUserConfig } from "hardhat/config";
+
+import hardhatToolboxMochaEthersPlugin from "@nomicfoundation/hardhat-toolbox-mocha-ethers";
 import { configVariable } from "hardhat/config";
-import HardhatIgnitionEthersPlugin from "@nomicfoundation/hardhat-ignition-ethers";
-import hardhatKeystore from "@nomicfoundation/hardhat-keystore";
-import hardhatTypechain from "@nomicfoundation/hardhat-typechain";
 
 const config: HardhatUserConfig = {
-  plugins: [HardhatIgnitionEthersPlugin, hardhatKeystore, hardhatTypechain],
+  plugins: [hardhatToolboxMochaEthersPlugin],
   solidity: {
     profiles: {
       default: {
@@ -16,7 +15,7 @@ const config: HardhatUserConfig = {
         settings: {
           optimizer: {
             enabled: true,
-            runs: 1,
+            runs: 200,
           },
         },
       },
@@ -36,12 +35,6 @@ const config: HardhatUserConfig = {
       chainType: "l1",
       url: configVariable("SEPOLIA_RPC_URL"),
       accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
-    },
-    arbSepolia: {
-      type: "http",
-      chainType: "l1",
-      url: configVariable("ARB_SEPOLIA_RPC_URL"),
-      accounts: [configVariable("ARB_SEPOLIA_PRIVATE_KEY")],
     },
   },
 };
